@@ -25,8 +25,8 @@ public class ClearCommand implements Command {
     public String usage() {
         return """
                 Use %prefix%clear to delete all messages of the channel.
-                Use %prefix%clear <amount> to delete the last <amount> messages from the channel.
-                """.replaceAll("%prefix%", KingsBot.getCommandPrefix());
+                Use %prefix%clear <amount> to delete the last <amount> messages from the channel."""
+                .replaceAll("%prefix%", KingsBot.getCommandPrefix());
     }
 
     @Override

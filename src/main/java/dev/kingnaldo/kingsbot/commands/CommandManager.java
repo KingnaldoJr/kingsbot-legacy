@@ -3,6 +3,7 @@ package dev.kingnaldo.kingsbot.commands;
 import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.music.*;
 import dev.kingnaldo.kingsbot.commands.administration.ClearCommand;
+import dev.kingnaldo.kingsbot.commands.utils.HelpCommand;
 import dev.kingnaldo.kingsbot.commands.utils.PingCommand;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -10,10 +11,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CommandManager extends ListenerAdapter {
     private Map<String, Command> commands = new HashMap<>();
@@ -21,6 +19,7 @@ public class CommandManager extends ListenerAdapter {
 
     public CommandManager() {
         addCommand(new PingCommand());
+        addCommand(new HelpCommand());
         addCommand(new ClearCommand());
         addCommand(new JoinCommand());
         addCommand(new LeaveCommand());
@@ -32,6 +31,12 @@ public class CommandManager extends ListenerAdapter {
         addCommand(new ShuffleCommand());
         addCommand(new UnshuffleCommand());
         addCommand(new LoopCommand());
+
+        HelpCommand.commands.addAll(this.commands.values());
+    }
+
+    public Map<String, Command> getCommands() {
+        return commands;
     }
 
     @Override

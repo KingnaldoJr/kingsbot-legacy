@@ -14,6 +14,7 @@ java {
 shadowJar {
     manifest {
         attributes('Main-Class':'dev.kingnaldo.kingsbot.KingsBot')
+        attributes('Multi-Release':true)
     }
 }
 

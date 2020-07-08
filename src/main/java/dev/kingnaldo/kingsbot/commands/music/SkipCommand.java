@@ -22,7 +22,7 @@ public class SkipCommand implements Command {
 
     @Override
     public String usage() {
-        return "Use " + KingsBot.getCommandPrefix() + " skip to skip to next music.";
+        return "Use " + KingsBot.getCommandPrefix() + "skip to skip to next music.";
     }
 
     @Override
