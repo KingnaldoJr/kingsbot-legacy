@@ -104,6 +104,7 @@ public class MusicPlayerHandler {
                     track.artists().forEach(artist -> builder.append(artist.name()).append(" "));
                     builder.append("- ").append(track.name());
                     this.queue.add("ytsearch:" + builder.toString());
+                    this.queueIndex.add(this.queueIndex.size(), this.queueIndex.size() - 1);
                 });
                 if(this.player.getPlayingTrack() == null && !isPaused())
                     this.playNextTrack();
@@ -148,11 +149,12 @@ public class MusicPlayerHandler {
             if(this.player.getPlayingTrack() == null && !isPaused())
                 this.playNextTrack();
         },
-                () -> textChannel.sendMessage("No matches found.").queue()
-                , exception -> textChannel.sendMessage("No matches found.").queue()));
+                () -> textChannel.sendMessage("No matches found.").queue(),
+                exception -> textChannel.sendMessage("No matches found.").queue()));
     }
 
     public synchronized boolean removeFromQueue(int position) {
+        if(isShuffled()) this.queueIndex.remove(this.queue.indexOf(this.queue.get(position)));
         return this.queue.remove(this.queue.get(position));
     }
 
@@ -216,6 +218,10 @@ public class MusicPlayerHandler {
         this.skipVotes.remove(user);
     }
 
+    public synchronized boolean isShuffled() {
+        return this.queueIndex == null || this.queueIndex.isEmpty();
+    }
+
     public synchronized void forceSkip() {
         this.textChannel.sendMessage("Skipped!").queue();
         this.scheduler.skipTrack();
@@ -256,6 +262,7 @@ public class MusicPlayerHandler {
                 this.position = 0;
             }
         }
+        if(this.position >= this.queue.size()) return;
 
         FunctionalResultHandler handler = new FunctionalResultHandler(
                 this.scheduler::queue, playlist -> {
@@ -267,8 +274,7 @@ public class MusicPlayerHandler {
             textChannel.sendMessage("No matches found.").queue();
             this.playNextTrack(); });
 
-        if(this.position >= this.queue.size()) return;
-        if(this.queueIndex == null || this.queueIndex.isEmpty()) {
+        if(isShuffled()) {
             MusicPlayerHandler.playerManager.loadItem(this.queue.get(this.position), handler);
         }else{
             MusicPlayerHandler.playerManager.loadItem(
