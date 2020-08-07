@@ -2,6 +2,7 @@ package dev.kingnaldo.kingsbot.commands.bot;
 
 import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
+import dev.kingnaldo.kingsbot.commands.CommandCategory;
 import dev.kingnaldo.kingsbot.config.Config;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -19,6 +20,9 @@ public class ShutdownCommand implements Command {
     public String[] aliases() {
         return new String[0];
     }
+
+    @Override
+    public CommandCategory category() { return CommandCategory.BOT; }
 
     @Override
     public String usage() {

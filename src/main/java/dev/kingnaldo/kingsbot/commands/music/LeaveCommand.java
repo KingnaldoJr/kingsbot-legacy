@@ -1,6 +1,7 @@
 package dev.kingnaldo.kingsbot.commands.music;
 
 import dev.kingnaldo.kingsbot.commands.Command;
+import dev.kingnaldo.kingsbot.commands.CommandCategory;
 import dev.kingnaldo.kingsbot.config.Config;
 import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import net.dv8tion.jda.api.entities.Member;
@@ -21,6 +22,9 @@ public class LeaveCommand implements Command {
     public String[] aliases() {
         return new String[0];
     }
+
+    @Override
+    public CommandCategory category() { return CommandCategory.MUSIC; }
 
     @Override
     public String usage() {

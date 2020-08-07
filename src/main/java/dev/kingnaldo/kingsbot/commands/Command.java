@@ -9,6 +9,7 @@ import java.util.List;
 public interface Command {
     String name();
     String[] aliases();
+    CommandCategory category();
     String usage();
     void execute(TextChannel channel, Member author, Message message, List<String> args);
 }

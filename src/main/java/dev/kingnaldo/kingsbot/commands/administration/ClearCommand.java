@@ -1,6 +1,7 @@
 package dev.kingnaldo.kingsbot.commands.administration;
 
 import dev.kingnaldo.kingsbot.commands.Command;
+import dev.kingnaldo.kingsbot.commands.CommandCategory;
 import dev.kingnaldo.kingsbot.config.Config;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
@@ -20,6 +21,9 @@ public class ClearCommand implements Command {
     public String[] aliases() {
         return new String[]{ "cl" };
     }
+
+    @Override
+    public CommandCategory category() { return CommandCategory.ADMINISTRATION; }
 
     @Override
     public String usage() {

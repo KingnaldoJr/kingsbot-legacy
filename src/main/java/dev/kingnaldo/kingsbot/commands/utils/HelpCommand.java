@@ -1,6 +1,7 @@
 package dev.kingnaldo.kingsbot.commands.utils;
 
 import dev.kingnaldo.kingsbot.commands.Command;
+import dev.kingnaldo.kingsbot.commands.CommandCategory;
 import dev.kingnaldo.kingsbot.config.Config;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -21,6 +22,9 @@ public class HelpCommand implements Command {
     public String[] aliases() {
         return new String[]{ "h" };
     }
+
+    @Override
+    public CommandCategory category() { return CommandCategory.MUSIC; }
 
     @Override
     public String usage() {
