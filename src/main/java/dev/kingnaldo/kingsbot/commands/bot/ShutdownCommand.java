@@ -1,4 +1,4 @@
-package dev.kingnaldo.kingsbot.commands.utils;
+package dev.kingnaldo.kingsbot.commands.bot;
 
 import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
@@ -9,11 +9,10 @@ import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.List;
 
-public class PingCommand implements Command {
-
+public class ShutdownCommand implements Command {
     @Override
     public String name() {
-        return "ping";
+        return "shutdown";
     }
 
     @Override
@@ -23,11 +22,14 @@ public class PingCommand implements Command {
 
     @Override
     public String usage() {
-        return "Use " + Config.get("PREFIX") + "ping to test the bot's ping.";
+        return "Use " + Config.get("PREFIX") + "shutdown to shutdown the bot!";
     }
 
     @Override
     public void execute(TextChannel channel, Member author, Message message, List<String> args) {
-        channel.sendMessage("Pong!").queue(msg -> msg.editMessageFormat("The bot ping is %sms", KingsBot.getBOT().getGatewayPing()).queue());
+        if(author.getId().equals(Config.get("OWNER_ID"))) {
+            KingsBot.LOGGER.info("Shutdown command executed, shutdown now.");
+            KingsBot.getBOT().shutdown();
+        }
     }
 }

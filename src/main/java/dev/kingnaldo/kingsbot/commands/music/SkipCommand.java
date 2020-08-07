@@ -1,7 +1,7 @@
 package dev.kingnaldo.kingsbot.commands.music;
 
-import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
+import dev.kingnaldo.kingsbot.config.Config;
 import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -22,7 +22,7 @@ public class SkipCommand implements Command {
 
     @Override
     public String usage() {
-        return "Use " + KingsBot.getCommandPrefix() + "skip to skip to next music.";
+        return "Use " + Config.get("PREFIX") + "skip to skip to next music.";
     }
 
     @Override

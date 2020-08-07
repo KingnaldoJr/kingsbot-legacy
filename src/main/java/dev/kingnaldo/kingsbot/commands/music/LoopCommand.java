@@ -1,7 +1,7 @@
 package dev.kingnaldo.kingsbot.commands.music;
 
-import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
+import dev.kingnaldo.kingsbot.config.Config;
 import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import dev.kingnaldo.kingsbot.music.RepeatMode;
 import net.dv8tion.jda.api.entities.Member;
@@ -23,7 +23,7 @@ public class LoopCommand implements Command {
 
     @Override
     public String usage() {
-        return "Use " + KingsBot.getCommandPrefix() + "loop to change the loop of the queue.";
+        return "Use " + Config.get("PREFIX") + "loop to change the loop of the queue.";
     }
 
     @Override

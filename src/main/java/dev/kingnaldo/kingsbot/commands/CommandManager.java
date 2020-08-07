@@ -1,23 +1,28 @@
 package dev.kingnaldo.kingsbot.commands;
 
-import dev.kingnaldo.kingsbot.KingsBot;
-import dev.kingnaldo.kingsbot.commands.music.*;
 import dev.kingnaldo.kingsbot.commands.administration.ClearCommand;
+import dev.kingnaldo.kingsbot.commands.bot.ShutdownCommand;
+import dev.kingnaldo.kingsbot.commands.music.*;
 import dev.kingnaldo.kingsbot.commands.utils.HelpCommand;
 import dev.kingnaldo.kingsbot.commands.utils.PingCommand;
+import dev.kingnaldo.kingsbot.config.Config;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CommandManager extends ListenerAdapter {
     private Map<String, Command> commands = new HashMap<>();
     private Map<String, Command> commandsAliases = new HashMap<>();
 
     public CommandManager() {
+        addCommand(new ShutdownCommand());
         addCommand(new PingCommand());
         addCommand(new HelpCommand());
         addCommand(new ClearCommand());
@@ -44,9 +49,9 @@ public class CommandManager extends ListenerAdapter {
         if(event.getAuthor().isBot()) return;
 
         final String message = event.getMessage().getContentRaw();
-        if(!message.startsWith(KingsBot.getCommandPrefix())) return;
+        if(!message.startsWith(Config.get("PREFIX"))) return;
 
-        final String[] entry = message.substring(KingsBot.getCommandPrefix().length()).split("\\s+");
+        final String[] entry = message.substring(Config.get("PREFIX").length()).split("\\s+");
         final String command = entry[0].toLowerCase();
         if(this.commands.containsKey(command))
             executeCommand(this.commands.get(command), entry, event);

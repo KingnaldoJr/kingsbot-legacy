@@ -1,7 +1,7 @@
 package dev.kingnaldo.kingsbot.commands.music;
 
-import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
+import dev.kingnaldo.kingsbot.config.Config;
 import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
@@ -23,7 +23,7 @@ public class PlayCommand implements Command {
 
     @Override
     public String usage() {
-        return "Use " + KingsBot.getCommandPrefix() + "play <music-link> to add the music to queue.";
+        return "Use " + Config.get("PREFIX") + "play <music-link> to add the music to queue.";
     }
 
     @Override
