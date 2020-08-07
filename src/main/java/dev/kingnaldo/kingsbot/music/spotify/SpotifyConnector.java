@@ -4,6 +4,7 @@ import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import dev.kingnaldo.kingsbot.KingsBot;
+import dev.kingnaldo.kingsbot.config.Config;
 import org.apache.hc.core5.http.ParseException;
 
 import java.io.IOException;
@@ -13,8 +14,8 @@ public class SpotifyConnector {
 
     public static SpotifyApi getSpotifyAPI() throws ParseException, SpotifyWebApiException, IOException {
         SpotifyApi spotifyApi = new SpotifyApi.Builder()
-                .setClientId(KingsBot.getProperties().getProperty("spotify.id"))
-                .setClientSecret(KingsBot.getProperties().getProperty("spotify.secret"))
+                .setClientId(Config.get("SPOTIFY_ID"))
+                .setClientSecret(Config.get("SPOTIFY_SECRET"))
                 .build();
 
         spotifyApi.setAccessToken(spotifyApi.clientCredentials().build().execute().getAccessToken());

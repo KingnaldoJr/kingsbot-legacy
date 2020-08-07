@@ -1,7 +1,7 @@
 package dev.kingnaldo.kingsbot.commands.administration;
 
-import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
+import dev.kingnaldo.kingsbot.config.Config;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -26,7 +26,7 @@ public class ClearCommand implements Command {
         return """
                 Use %prefix%clear to delete all messages of the channel.
                 Use %prefix%clear <amount> to delete the last <amount> messages from the channel."""
-                .replaceAll("%prefix%", KingsBot.getCommandPrefix());
+                .replaceAll("%prefix%", Config.get("PREFIX"));
     }
 
     @Override
@@ -54,7 +54,7 @@ public class ClearCommand implements Command {
             }
         }else{
             channel.sendMessage("Invalid command usage, use %prefix%help clear for help."
-                    .replaceAll("%prefix%", KingsBot.getCommandPrefix())).queue();
+                    .replaceAll("%prefix%", Config.get("PREFIX"))).queue();
         }
     }
 }
