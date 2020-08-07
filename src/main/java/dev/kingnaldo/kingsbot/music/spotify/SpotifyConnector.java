@@ -1,35 +1,33 @@
 package dev.kingnaldo.kingsbot.music.spotify;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wrapper.spotify.SpotifyApi;
+import com.wrapper.spotify.exceptions.SpotifyWebApiException;
+import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import dev.kingnaldo.kingsbot.KingsBot;
-import dev.kingnaldo.kingsbot.music.spotify.objects.SpotifyAccessToken;
-import dev.kingnaldo.kingsbot.utils.HTTPRequest;
+import org.apache.hc.core5.http.ParseException;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class SpotifyConnector {
 
-    public static SpotifyAccessToken getAccessToken() throws IOException {
-        String url = "https://accounts.spotify.com/api/token";
-        List<String> bodyParameters = List.of("grant_type=client_credentials");
-        Map<String, String> headers = Map.of(
-                "Accept", "application/json",
-                "Authorization", "Basic " +
-                        Base64.getEncoder().encodeToString((
-                                KingsBot.getProperties().getProperty("spotify.id") + ":" +
-                                        KingsBot.getProperties().getProperty("spotify.secret"))
-                                .getBytes()));
-        BufferedReader reader = new BufferedReader(
-                new InputStreamReader(HTTPRequest.POST(url, bodyParameters, headers)));
+    public static SpotifyApi getSpotifyAPI() throws ParseException, SpotifyWebApiException, IOException {
+        SpotifyApi spotifyApi = new SpotifyApi.Builder()
+                .setClientId(KingsBot.getProperties().getProperty("spotify.id"))
+                .setClientSecret(KingsBot.getProperties().getProperty("spotify.secret"))
+                .build();
 
-        SpotifyAccessToken accessToken = new ObjectMapper().readValue(reader, SpotifyAccessToken.class);
+        spotifyApi.setAccessToken(spotifyApi.clientCredentials().build().execute().getAccessToken());
+        return spotifyApi;
+    }
 
-        reader.close();
-        return accessToken;
+    public static void updateAccessToken(SpotifyApi api) {
+        CompletableFuture<ClientCredentials> clientCredentialsFuture =
+                api.clientCredentials().build().executeAsync();
+
+        clientCredentialsFuture.whenComplete((cc, thr) -> {
+            if(thr == null) api.setAccessToken(cc.getAccessToken());
+            else KingsBot.LOGGER.error(thr.getMessage());
+        });
     }
 }

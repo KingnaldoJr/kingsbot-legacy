@@ -1,14 +1,18 @@
 package dev.kingnaldo.kingsbot.music.spotify;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.neovisionaries.i18n.CountryCode;
+import com.wrapper.spotify.enums.ModelObjectType;
+import com.wrapper.spotify.exceptions.SpotifyWebApiException;
+import com.wrapper.spotify.model_objects.specification.Paging;
+import com.wrapper.spotify.model_objects.specification.PlaylistTrack;
+import com.wrapper.spotify.model_objects.specification.Track;
+import com.wrapper.spotify.model_objects.specification.TrackSimplified;
 import dev.kingnaldo.kingsbot.KingsBot;
-import dev.kingnaldo.kingsbot.music.spotify.objects.*;
-import dev.kingnaldo.kingsbot.utils.HTTPRequest;
+import org.apache.hc.core5.http.ParseException;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 public class SpotifyUtils {
@@ -40,70 +44,64 @@ public class SpotifyUtils {
         else return null;
     }
 
-    public static List<SpotifySimplifiedTrack> getSpotifyObject(String url) throws IOException {
+    public static List<TrackSimplified> getSpotifyObject(String url) throws IOException, ParseException, SpotifyWebApiException {
         SpotifyType type = getType(url);
         if(type == null) return null;
-
-        List<SpotifySimplifiedTrack> tracks = new ArrayList<>();
-        final ObjectMapper mapper = new ObjectMapper();
-        final Map<String, String> headers = Map.of(
-                "Accept", "application/json",
-                "Content-Type", "application/json",
-                "Authorization", "Bearer " +
-                        KingsBot.getSpotifyAccessToken().accessToken());
+        List<TrackSimplified> tracks = new ArrayList<>();
 
         switch(type) {
             case ALBUM -> {
                 int offset = 0, total;
                 do {
-                    SpotifyAlbumTracks albumTracks = mapper.readValue(
-                            HTTPRequest.GET(API_BASE_URL + "albums/" +
-                                    SPOTIFY_ALBUM.matcher(url).results().findFirst().get().group(1) +
-                                    "/tracks?limit=50&offset=" + offset, headers),
-                            SpotifyAlbumTracks.class);
+                    Paging<TrackSimplified> albumTracks = KingsBot.getSpotifyAPI().getAlbumsTracks(
+                            SPOTIFY_ALBUM.matcher(url).results().findFirst().get().group(1)).build().execute();
 
-                    tracks.addAll(albumTracks.items());
+                    tracks.addAll(List.of(albumTracks.getItems()));
 
-                    offset += albumTracks.limit();
-                    total = albumTracks.total();
+                    offset += albumTracks.getLimit();
+                    total = albumTracks.getTotal();
                 }while(offset <= total);
             }
             case ARTIST -> {
-                SpotifyArtistTopTracks topTracks = mapper.readValue(
-                        HTTPRequest.GET(API_BASE_URL + "artists/" +
-                                SPOTIFY_ARTIST.matcher(url).results().findFirst().get().group(1) +
-                                "/top-tracks?market=BR", headers),
-                        SpotifyArtistTopTracks.class);
-                tracks.addAll(topTracks.tracks());
+                Track[] topTracks = KingsBot.getSpotifyAPI().getArtistsTopTracks(
+                        SPOTIFY_ARTIST.matcher(url).results().findFirst().get().group(1), CountryCode.BR)
+                        .build().execute();
+                List.of(topTracks).forEach(track -> {
+                    TrackSimplified trackSimplified = new TrackSimplified.Builder()
+                            .setArtists(track.getArtists())
+                            .setName(track.getName()).build();
+                    tracks.add(trackSimplified);
+                });
             }
             case PLAYLIST -> {
                 int offset = 0, total;
                 do {
-                    SpotifyPlaylistPaging playlistTracks = mapper.readValue(
-                            HTTPRequest.GET(API_BASE_URL + "playlists/" +
-                                    SPOTIFY_PLAYLIST.matcher(url).results().findFirst().get().group(1)
-                                    + "/tracks?fields=items(track(artists(name,uri)," +
-                                    "duration_ms,name,uri,is_local)),limit,offset,total&offset=" +
-                                    offset, headers),
-                            SpotifyPlaylistPaging.class);
+                    Paging<PlaylistTrack> playlistTracks = KingsBot.getSpotifyAPI().getPlaylistsItems(
+                            SPOTIFY_PLAYLIST.matcher(url).results().findFirst().get().group(1)).build().execute();
 
-                    playlistTracks.items().forEach(playlistTrack ->
-                            tracks.add(new SpotifySimplifiedTrack(playlistTrack.track().artists(),
-                                playlistTrack.track().name(),
-                                playlistTrack.track().uri())));
+                    List.of(playlistTracks.getItems()).parallelStream().forEachOrdered(playlistTrack -> {
+                        if(playlistTrack.getTrack().getType().equals(ModelObjectType.TRACK)) {
+                            TrackSimplified trackSimplified = new TrackSimplified.Builder()
+                                    .setArtists(((Track) playlistTrack.getTrack()).getArtists())
+                                    .setName(((Track) playlistTrack.getTrack()).getName()).build();
 
-                    offset += playlistTracks.limit();
-                    total = playlistTracks.total();
+                            tracks.add(trackSimplified);
+                        }
+                    });
+
+                    offset += playlistTracks.getLimit();
+                    total = playlistTracks.getTotal();
                 }while(offset <= total);
             }
             case TRACK -> {
-                SpotifyTrack track = mapper.readValue(
-                        HTTPRequest.GET(API_BASE_URL + "tracks/" +
-                                SPOTIFY_TRACK.matcher(url).results().findFirst().get().group(1),
-                                headers),
-                        SpotifyTrack.class);
-                tracks.add(new SpotifySimplifiedTrack(
-                        track.artists(), track.name(), track.uri()));
+                Track track = KingsBot.getSpotifyAPI().getTrack(
+                        SPOTIFY_TRACK.matcher(url).results().findFirst().get().group(1)).build().execute();
+
+                TrackSimplified trackSimplified = new TrackSimplified.Builder()
+                        .setArtists(track.getArtists())
+                        .setName(track.getName()).build();
+
+                tracks.add(trackSimplified);
             }
             default -> {}
         }

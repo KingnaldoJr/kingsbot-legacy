@@ -7,14 +7,17 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.wrapper.spotify.exceptions.SpotifyWebApiException;
+import com.wrapper.spotify.model_objects.specification.TrackSimplified;
 import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.music.spotify.SpotifyUtils;
-import dev.kingnaldo.kingsbot.music.spotify.objects.SpotifySimplifiedTrack;
+import dev.kingnaldo.kingsbot.music.youtube.YoutubeUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import org.apache.hc.core5.http.ParseException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -97,18 +100,18 @@ public class MusicPlayerHandler {
     public synchronized void addToQueue(int position, String identifier, boolean isSoundCloud) {
         if(SpotifyUtils.isSpotify(identifier)) {
             try {
-                List<SpotifySimplifiedTrack> tracks = SpotifyUtils.getSpotifyObject(identifier);
+                List<TrackSimplified> tracks = SpotifyUtils.getSpotifyObject(identifier);
                 textChannel.sendMessage("Added " + tracks.size() + " musics to queue.").queue();
                 tracks.forEach(track -> {
                     StringBuilder builder = new StringBuilder();
-                    track.artists().forEach(artist -> builder.append(artist.name()).append(" "));
-                    builder.append("- ").append(track.name());
+                    List.of(track.getArtists()).forEach(artist -> builder.append(artist.getName()).append(" "));
+                    builder.append("- ").append(track.getName());
                     this.queue.add("ytsearch:" + builder.toString());
-                    this.queueIndex.add(this.queueIndex.size(), this.queueIndex.size() - 1);
+                    if(isShuffled()) this.queueIndex.add(this.queue.size() - 1);
                 });
                 if(this.player.getPlayingTrack() == null && !isPaused())
                     this.playNextTrack();
-            }catch(IOException e) {
+            }catch(IOException | ParseException | SpotifyWebApiException e) {
                 textChannel.sendMessage("Something went wrong.").queue();
                 KingsBot.LOGGER.error(e.getMessage());
             }
@@ -117,7 +120,7 @@ public class MusicPlayerHandler {
 
         if(!Patterns.WEB_URL.matcher(identifier).matches()) {
             if(isSoundCloud) identifier = "scsearch: " + identifier;
-            else identifier = "ytsearch: " + identifier;
+            else identifier = "https://www.youtube.com/watch?v=" + YoutubeUtils.getFirstResultId(identifier);
         }
 
         MusicPlayerHandler.playerManager.loadItem(identifier, new FunctionalResultHandler(
@@ -128,18 +131,20 @@ public class MusicPlayerHandler {
                             .setDescription("[" + track.getInfo().title
                                     + "](" + track.getInfo().uri + ")")
                             .build()).queue();
+                    if(isShuffled()) this.queueIndex.add(this.queueIndex.size(), this.queueIndex.size() - 1);
                     if(this.player.getPlayingTrack() == null && !isPaused())
                         this.playNextTrack();
                 }, playlist -> {
             if (!playlist.isSearchResult()) {
-                playlist.getTracks().parallelStream().forEachOrdered(track ->
-                        this.queue.add(track.getInfo().uri));
+                playlist.getTracks().parallelStream().forEachOrdered(track -> this.queue.add(track.getInfo().uri));
+                if(isShuffled()) this.queueIndex.add(this.queueIndex.size(), this.queueIndex.size() - 1);
                 textChannel.sendMessage(new EmbedBuilder()
                         .setDescription("Added " + playlist.getTracks().size()
                                 + " musics to queue.").build()).queue();
             }else{
                 AudioTrack track = playlist.getTracks().get(0);
                 this.queue.add(position, track.getInfo().uri);
+                if(isShuffled()) this.queueIndex.add(this.queueIndex.size(), this.queueIndex.size() - 1);
                 textChannel.sendMessage(new EmbedBuilder()
                         .setTitle("Added to queue")
                         .setDescription("[" + track.getInfo().title
@@ -219,7 +224,7 @@ public class MusicPlayerHandler {
     }
 
     public synchronized boolean isShuffled() {
-        return this.queueIndex == null || this.queueIndex.isEmpty();
+        return this.queueIndex != null && !this.queueIndex.isEmpty();
     }
 
     public synchronized void forceSkip() {
@@ -274,7 +279,7 @@ public class MusicPlayerHandler {
             textChannel.sendMessage("No matches found.").queue();
             this.playNextTrack(); });
 
-        if(isShuffled()) {
+        if(!isShuffled()) {
             MusicPlayerHandler.playerManager.loadItem(this.queue.get(this.position), handler);
         }else{
             MusicPlayerHandler.playerManager.loadItem(
