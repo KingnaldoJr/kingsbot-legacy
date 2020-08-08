@@ -3,4 +3,4 @@
 build/
 src/test/
 
-.env
+config.json

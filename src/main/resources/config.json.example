@@ -1,0 +1,21 @@
+{
+  "token": "",
+  "owner_id": "",
+  "prefix": "&",
+  "db": {
+    "hosts": [
+      {
+        "hostname": "localhost",
+        "port": 27017
+      }
+    ],
+    database: "kingsbot",
+    "username": "root",
+    "password": ""
+  },
+  "youtube_key": "",
+  "spotify": {
+    "client_id": "",
+    "client_secret": ""
+  }
+}

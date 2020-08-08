@@ -3,7 +3,7 @@ package dev.kingnaldo.kingsbot.commands.bot;
 import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
 import dev.kingnaldo.kingsbot.commands.CommandCategory;
-import dev.kingnaldo.kingsbot.config.Config;
+import dev.kingnaldo.kingsbot.db.DatabaseManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -26,13 +26,14 @@ public class ShutdownCommand implements Command {
 
     @Override
     public String usage() {
-        return "Use " + Config.get("PREFIX") + "shutdown to shutdown the bot!";
+        return "Use " + KingsBot.getConfig().prefix() + "shutdown to shutdown the bot!";
     }
 
     @Override
     public void execute(TextChannel channel, Member author, Message message, List<String> args) {
-        if(author.getId().equals(Config.get("OWNER_ID"))) {
+        if(author.getId().equals(KingsBot.getConfig().ownerId())) {
             KingsBot.LOGGER.info("Shutdown command executed, shutdown now.");
+            DatabaseManager.disconnect();
             KingsBot.getBOT().shutdown();
         }
     }

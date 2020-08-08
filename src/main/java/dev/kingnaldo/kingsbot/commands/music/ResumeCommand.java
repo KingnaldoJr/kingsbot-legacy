@@ -1,8 +1,8 @@
 package dev.kingnaldo.kingsbot.commands.music;
 
+import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
 import dev.kingnaldo.kingsbot.commands.CommandCategory;
-import dev.kingnaldo.kingsbot.config.Config;
 import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -27,7 +27,7 @@ public class ResumeCommand implements Command {
 
     @Override
     public String usage() {
-        return "Use " + Config.get("PREFIX") + "resume to resume the player.";
+        return "Use " + KingsBot.getConfig().prefix() + "resume to resume the player.";
     }
 
     @Override

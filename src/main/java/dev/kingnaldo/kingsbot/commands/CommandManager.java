@@ -1,11 +1,11 @@
 package dev.kingnaldo.kingsbot.commands;
 
+import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.administration.ClearCommand;
 import dev.kingnaldo.kingsbot.commands.bot.ShutdownCommand;
 import dev.kingnaldo.kingsbot.commands.music.*;
 import dev.kingnaldo.kingsbot.commands.utils.HelpCommand;
 import dev.kingnaldo.kingsbot.commands.utils.PingCommand;
-import dev.kingnaldo.kingsbot.config.Config;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -49,9 +49,9 @@ public class CommandManager extends ListenerAdapter {
         if(event.getAuthor().isBot()) return;
 
         final String message = event.getMessage().getContentRaw();
-        if(!message.startsWith(Config.get("PREFIX"))) return;
+        if(!message.startsWith(KingsBot.getConfig().prefix())) return;
 
-        final String[] entry = message.substring(Config.get("PREFIX").length()).split("\\s+");
+        final String[] entry = message.substring(KingsBot.getConfig().prefix().length()).split("\\s+");
         final String command = entry[0].toLowerCase();
         if(this.commands.containsKey(command))
             executeCommand(this.commands.get(command), entry, event);

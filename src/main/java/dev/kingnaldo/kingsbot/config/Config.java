@@ -1,15 +1,12 @@
 package dev.kingnaldo.kingsbot.config;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Config {
-    private static Dotenv dotenv;
-
-    public static void load() {
-        dotenv = Dotenv.load();
-    }
-
-    public static String get(String config) {
-        return dotenv.get(config);
-    }
-}
+public record Config(
+        @JsonProperty("token") String token,
+        @JsonProperty("owner_id") String ownerId,
+        @JsonProperty("prefix") String prefix,
+        @JsonProperty("db") DB db,
+        @JsonProperty("youtube_key") String youtubeKey,
+        @JsonProperty("spotify") Spotify spotify
+) {}

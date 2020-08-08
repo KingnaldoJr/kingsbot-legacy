@@ -5,7 +5,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.SearchListResponse;
 import dev.kingnaldo.kingsbot.KingsBot;
-import dev.kingnaldo.kingsbot.config.Config;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -14,7 +13,7 @@ import java.util.Map;
 
 public class YoutubeUtils {
 
-    private final static String KEY = Config.get("YOUTUBE_KEY");
+    private final static String KEY = KingsBot.getConfig().youtubeKey();
     private final static YouTube YOUTUBE = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), request -> {})
             .setApplicationName("King's BOT")
             .build();
