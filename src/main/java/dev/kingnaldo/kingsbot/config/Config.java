@@ -9,5 +9,6 @@ public record Config(
         @JsonProperty("verbose") String verbose,
         @JsonProperty("db") DB db,
         @JsonProperty("youtube_key") String youtubeKey,
-        @JsonProperty("spotify") Spotify spotify
+        @JsonProperty("spotify") Spotify spotify,
+        @JsonProperty("ksoft_token") String KSoftToken
 ) {}

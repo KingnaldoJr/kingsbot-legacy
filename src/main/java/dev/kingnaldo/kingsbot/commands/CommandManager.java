@@ -36,6 +36,7 @@ public class CommandManager extends ListenerAdapter {
         addCommand(new ShuffleCommand());
         addCommand(new UnshuffleCommand());
         addCommand(new LoopCommand());
+        addCommand(new LyricsCommand());
 
         HelpCommand.commands.addAll(this.commands.values());
     }

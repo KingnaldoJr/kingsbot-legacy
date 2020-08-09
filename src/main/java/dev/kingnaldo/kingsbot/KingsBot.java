@@ -37,11 +37,8 @@ public class KingsBot {
                 return;
             }
 
-            LoggerConfig.load();
-
+            LoggerConfig.init();
             LOGGER = LogManager.getLogger(KingsBot.class);
-
-            LOGGER.info("Starting King's Bot!");
 
             DatabaseManager.connect();
             MusicPlayerHandler.init();

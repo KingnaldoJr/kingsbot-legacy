@@ -33,7 +33,7 @@ public class ShutdownCommand implements Command {
     @Override
     public void execute(TextChannel channel, Member author, Message message, List<String> args) {
         if(author.getId().equals(KingsBot.getConfig().ownerId())) {
-            LogManager.getLogger(ShutdownCommand.class).info("Shutdown command executed, shutdown now.");
+            LogManager.getLogger(ShutdownCommand.class).info("Shutdown command executed, shutting down now.");
             DatabaseManager.disconnect();
             KingsBot.getBOT().shutdown();
         }

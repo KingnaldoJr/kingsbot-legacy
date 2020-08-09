@@ -18,5 +18,6 @@
   "spotify": {
     "client_id": "",
     "client_secret": ""
-  }
+  },
+  "ksoft_token": ""
 }
