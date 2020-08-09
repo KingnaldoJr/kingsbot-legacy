@@ -5,6 +5,7 @@ import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import dev.kingnaldo.kingsbot.commands.CommandManager;
 import dev.kingnaldo.kingsbot.config.Config;
 import dev.kingnaldo.kingsbot.config.ConfigManager;
+import dev.kingnaldo.kingsbot.config.LoggerConfig;
 import dev.kingnaldo.kingsbot.db.DatabaseManager;
 import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import dev.kingnaldo.kingsbot.music.spotify.SpotifyConnector;
@@ -21,7 +22,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 public class KingsBot {
-    public static final Logger LOGGER = LogManager.getLogger(KingsBot.class);
+    private static Logger LOGGER;
 
     private static JDA BOT = null;
     private static Config CONFIG;
@@ -32,12 +33,20 @@ public class KingsBot {
         try {
             CONFIG = ConfigManager.load();
             if(CONFIG == null) {
-                LOGGER.info("Shutting down, config.json missing.");
+                LOGGER.warn("Shutting down, config.json missing.");
                 return;
             }
 
+            LoggerConfig.load();
+
+            LOGGER = LogManager.getLogger(KingsBot.class);
+
+            LOGGER.info("Starting King's Bot!");
+
             DatabaseManager.connect();
             MusicPlayerHandler.init();
+
+            SPOTIFY_API = SpotifyConnector.getSpotifyAPI();
 
             JDABuilder builder = JDABuilder.create(GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS));
             builder.setToken(CONFIG.token());
@@ -45,8 +54,6 @@ public class KingsBot {
             builder.addEventListeners(new CommandManager());
 
             BOT = builder.build().awaitStatus(JDA.Status.CONNECTED);
-
-            SPOTIFY_API = SpotifyConnector.getSpotifyAPI();
         }catch(IOException | InterruptedException | LoginException | NullPointerException |
                 ParseException | SpotifyWebApiException | URISyntaxException e) {
             LOGGER.fatal(e.getCause().getMessage());

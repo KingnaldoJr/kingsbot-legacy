@@ -9,7 +9,6 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.specification.TrackSimplified;
-import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.music.spotify.SpotifyUtils;
 import dev.kingnaldo.kingsbot.music.youtube.YoutubeUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -18,6 +17,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import org.apache.hc.core5.http.ParseException;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -113,7 +113,7 @@ public class MusicPlayerHandler {
                     this.playNextTrack();
             }catch(IOException | ParseException | SpotifyWebApiException e) {
                 textChannel.sendMessage("Something went wrong.").queue();
-                KingsBot.LOGGER.error(e.getMessage());
+                LogManager.getLogger(MusicPlayerHandler.class).error(e.getMessage());
             }
             return;
         }

@@ -2,6 +2,7 @@
   "token": "",
   "owner_id": "",
   "prefix": "&",
+  "verbose": "WARN",
   "db": {
     "hosts": [
       {

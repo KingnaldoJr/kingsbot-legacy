@@ -24,7 +24,7 @@ public class DatabaseManager {
 
         MongoClientSettings settings = MongoClientSettings.builder()
                 .credential(credential)
-                .applyToSslSettings(builder -> builder.enabled(true))
+                .applyToSslSettings(builder -> builder.enabled(false))
                 .applyToClusterSettings(builder ->
                         builder.hosts(KingsBot.getConfig().db().hosts().stream().map(host ->
                                 new ServerAddress(host.hostname(), host.port())).collect(Collectors.toList())))

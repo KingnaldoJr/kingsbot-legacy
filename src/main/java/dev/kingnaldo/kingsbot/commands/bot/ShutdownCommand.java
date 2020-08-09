@@ -7,6 +7,7 @@ import dev.kingnaldo.kingsbot.db.DatabaseManager;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class ShutdownCommand implements Command {
     @Override
     public void execute(TextChannel channel, Member author, Message message, List<String> args) {
         if(author.getId().equals(KingsBot.getConfig().ownerId())) {
-            KingsBot.LOGGER.info("Shutdown command executed, shutdown now.");
+            LogManager.getLogger(ShutdownCommand.class).info("Shutdown command executed, shutdown now.");
             DatabaseManager.disconnect();
             KingsBot.getBOT().shutdown();
         }

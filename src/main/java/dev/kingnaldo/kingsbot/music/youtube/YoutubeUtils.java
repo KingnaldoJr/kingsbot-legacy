@@ -5,6 +5,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.SearchListResponse;
 import dev.kingnaldo.kingsbot.KingsBot;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 public class YoutubeUtils {
-
     private final static String KEY = KingsBot.getConfig().youtubeKey();
     private final static YouTube YOUTUBE = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), request -> {})
             .setApplicationName("King's BOT")
@@ -29,7 +29,7 @@ public class YoutubeUtils {
 
             return search.execute();
         }catch(IOException e) {
-            KingsBot.LOGGER.error(e.getMessage());
+            LogManager.getLogger(YoutubeUtils.class).error(e.getMessage());
             return null;
         }
     }

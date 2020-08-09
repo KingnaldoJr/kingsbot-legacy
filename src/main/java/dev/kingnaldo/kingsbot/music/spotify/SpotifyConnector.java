@@ -5,6 +5,7 @@ import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import dev.kingnaldo.kingsbot.KingsBot;
 import org.apache.hc.core5.http.ParseException;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -27,7 +28,7 @@ public class SpotifyConnector {
 
         clientCredentialsFuture.whenComplete((cc, thr) -> {
             if(thr == null) api.setAccessToken(cc.getAccessToken());
-            else KingsBot.LOGGER.error(thr.getMessage());
+            else LogManager.getLogger(SpotifyConnector.class).error(thr.getMessage());
         });
     }
 }
