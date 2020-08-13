@@ -4,6 +4,7 @@ import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
 import dev.kingnaldo.kingsbot.commands.CommandCategory;
 import dev.kingnaldo.kingsbot.db.DatabaseManager;
+import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -35,6 +36,7 @@ public class ShutdownCommand implements Command {
         if(author.getId().equals(KingsBot.getConfig().ownerId())) {
             LogManager.getLogger(ShutdownCommand.class).info("Shutdown command executed, shutting down now.");
             DatabaseManager.disconnect();
+            MusicPlayerHandler.getLavalink().shutdown();
             KingsBot.getBOT().shutdown();
         }
     }

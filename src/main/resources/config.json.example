@@ -1,5 +1,6 @@
 {
   "token": "",
+  "client_id": "",
   "owner_id": "",
   "prefix": "&",
   "verbose": "WARN",
@@ -14,6 +15,12 @@
     "username": "root",
     "password": ""
   },
+  "lavalink": [
+    {
+      "address": "localhost:2333",
+      "password": "youshallnotpass"
+    }
+  ],
   "youtube_key": "",
   "spotify": {
     "client_id": "",

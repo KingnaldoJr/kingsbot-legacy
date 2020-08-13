@@ -13,6 +13,8 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,13 +47,23 @@ public class KingsBot {
 
             SPOTIFY_API = SpotifyConnector.getSpotifyAPI();
 
-            JDABuilder builder = JDABuilder.create(GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS));
-            builder.setToken(CONFIG.token());
+            JDABuilder builder = JDABuilder.create(
+                    CONFIG.token(),
+                    GatewayIntent.GUILD_MEMBERS,
+                    GatewayIntent.GUILD_MESSAGES,
+                    GatewayIntent.GUILD_VOICE_STATES);
+            builder.setMemberCachePolicy(MemberCachePolicy.ONLINE);
+            builder.disableCache(
+                    CacheFlag.ACTIVITY,
+                    CacheFlag.CLIENT_STATUS,
+                    CacheFlag.EMOTE);
             builder.setActivity(Activity.listening("Duck Machine on Spotify"));
             builder.addEventListeners(new CommandManager());
+            builder.addEventListeners(MusicPlayerHandler.getLavalink());
+            builder.setVoiceDispatchInterceptor(MusicPlayerHandler.getLavalink().getVoiceInterceptor());
 
-            BOT = builder.build().awaitStatus(JDA.Status.CONNECTED);
-        }catch(IOException | InterruptedException | LoginException | NullPointerException |
+            BOT = builder.build();
+        }catch(IOException | LoginException | NullPointerException |
                 ParseException | SpotifyWebApiException | URISyntaxException e) {
             LOGGER.fatal(e.getCause().getMessage());
             DatabaseManager.disconnect();
@@ -59,7 +71,7 @@ public class KingsBot {
         }
     }
 
-    public static JDA getBOT() { return KingsBot.BOT; }
-    public static Config getConfig() { return KingsBot.CONFIG; }
-    public static SpotifyApi getSpotifyAPI() { return  KingsBot.SPOTIFY_API; }
+    public static JDA getBOT() { return BOT; }
+    public static Config getConfig() { return CONFIG; }
+    public static SpotifyApi getSpotifyAPI() { return  SPOTIFY_API; }
 }
