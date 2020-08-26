@@ -3,9 +3,9 @@ package dev.kingnaldo.kingsbot.commands.music;
 import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.commands.Command;
 import dev.kingnaldo.kingsbot.commands.CommandCategory;
+import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.util.List;
 
@@ -31,15 +31,13 @@ public class JoinCommand implements Command {
 
     @Override
     public void execute(TextChannel channel, Member author, Message message, List<String> args) {
-        AudioManager manager = channel.getGuild().getAudioManager();
-
-        if(manager.isConnected()) {
+        MusicPlayerHandler playerHandler = MusicPlayerHandler.getInstance(channel.getGuild(), channel);
+        if(playerHandler.isConnected()) {
             channel.sendMessage("Already connected in a channel.").queue();
             return;
         }
 
         GuildVoiceState state = author.getVoiceState();
-
         if(!state.inVoiceChannel()) {
             channel.sendMessage("You're not connected in a voice channel.").queue();
             return;
@@ -52,6 +50,6 @@ public class JoinCommand implements Command {
             channel.sendMessage("I don't have permission to join this voice channel.").queue();
         }
 
-        manager.openAudioConnection(voiceChannel);
+        playerHandler.connectToVoiceChannel(voiceChannel);
     }
 }

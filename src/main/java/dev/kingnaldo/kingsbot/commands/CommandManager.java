@@ -1,7 +1,7 @@
 package dev.kingnaldo.kingsbot.commands;
 
 import dev.kingnaldo.kingsbot.KingsBot;
-import dev.kingnaldo.kingsbot.commands.administration.ClearCommand;
+import dev.kingnaldo.kingsbot.commands.administration.PurgeCommand;
 import dev.kingnaldo.kingsbot.commands.bot.ShutdownCommand;
 import dev.kingnaldo.kingsbot.commands.music.*;
 import dev.kingnaldo.kingsbot.commands.utils.HelpCommand;
@@ -25,7 +25,7 @@ public class CommandManager extends ListenerAdapter {
         addCommand(new ShutdownCommand());
         addCommand(new PingCommand());
         addCommand(new HelpCommand());
-        addCommand(new ClearCommand());
+        addCommand(new PurgeCommand());
         addCommand(new JoinCommand());
         addCommand(new LeaveCommand());
         addCommand(new PlayCommand());

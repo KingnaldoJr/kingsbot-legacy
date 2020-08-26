@@ -6,7 +6,6 @@ import dev.kingnaldo.kingsbot.commands.CommandCategory;
 import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.util.List;
 
@@ -32,16 +31,14 @@ public class PlayCommand implements Command {
 
     @Override
     public void execute(TextChannel channel, Member author, Message message, List<String> args) {
-        if(!channel.getGuild().getSelfMember().getVoiceState().inVoiceChannel()) {
-            AudioManager manager = channel.getGuild().getAudioManager();
-
-            if(manager.isConnected()) {
+        MusicPlayerHandler playerHandler = MusicPlayerHandler.getInstance(channel.getGuild(), channel);
+        if(!playerHandler.isConnected()) {
+            if(playerHandler.isConnected()) {
                 channel.sendMessage("Already connected in a channel.").queue();
                 return;
             }
 
             GuildVoiceState state = author.getVoiceState();
-
             if(!state.inVoiceChannel()) {
                 channel.sendMessage("You're not connected in a voice channel.").queue();
                 return;
@@ -54,14 +51,16 @@ public class PlayCommand implements Command {
                 channel.sendMessage("I don't have permission to join this voice channel.").queue();
             }
 
-            manager.openAudioConnection(voiceChannel);
+            playerHandler.connectToVoiceChannel(voiceChannel);
         }
 
         if(args.isEmpty()) {
             channel.sendMessage("Incorrect usage.").queue();
             return;
+        }else if(args.get(0).equalsIgnoreCase("soundcloud")) {
+            playerHandler.addToQueue(String.join(" ", args.remove(0)), true);
+        }else{
+            playerHandler.addToQueue(String.join(" ", args), false);
         }
-
-        MusicPlayerHandler.getInstance(message.getGuild(), channel).addToQueue(String.join(" ", args), false);
     }
 }

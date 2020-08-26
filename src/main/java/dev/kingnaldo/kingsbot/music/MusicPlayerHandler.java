@@ -12,12 +12,14 @@ import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.music.spotify.SpotifyUtils;
 import dev.kingnaldo.kingsbot.music.youtube.YoutubeUtils;
 import lavalink.client.LavalinkUtil;
+import lavalink.client.io.Link;
 import lavalink.client.io.jda.JdaLavalink;
 import lavalink.client.player.LavalinkPlayer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.VoiceChannel;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.logging.log4j.LogManager;
 
@@ -84,12 +86,23 @@ public class MusicPlayerHandler {
     }
 
     public static void removeGuild(Guild guild) {
-        PLAYER_INSTANCES.remove(guild.getIdLong());
+        if(PLAYER_INSTANCES.get(guild.getIdLong()) != null) {
+            PLAYER_INSTANCES.get(guild.getIdLong()).removeThisGuild();
+        }
     }
 
     private void removeThisGuild() {
+        player.getLink().disconnect();
         player.getLink().destroy();
         PLAYER_INSTANCES.remove(guild.getIdLong());
+    }
+
+    public boolean isConnected() {
+        return player.getLink().getState() == Link.State.CONNECTED;
+    }
+
+    public void connectToVoiceChannel(VoiceChannel channel) {
+        LAVALINK.getLink(channel.getGuild()).connect(channel);
     }
 
     public RepeatMode getRepeatMode() { return repeatMode; }
@@ -242,8 +255,9 @@ public class MusicPlayerHandler {
     }
 
     public synchronized void stopQueue() {
-        player.getLink().destroy();
-        removeThisGuild();
+        queue.clear();
+        if(queueIndex != null) queueIndex.clear();
+        player.stopTrack();
     }
 
     public synchronized void onTrackStart() {

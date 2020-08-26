@@ -10,16 +10,16 @@ import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.List;
 
-public class ClearCommand implements Command {
+public class PurgeCommand implements Command {
 
     @Override
     public String name() {
-        return "clear";
+        return "purge";
     }
 
     @Override
     public String[] aliases() {
-        return new String[]{ "cl" };
+        return new String[0];
     }
 
     @Override
