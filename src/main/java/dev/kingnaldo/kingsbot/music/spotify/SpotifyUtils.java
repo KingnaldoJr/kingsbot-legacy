@@ -54,7 +54,8 @@ public class SpotifyUtils {
                 int offset = 0, total;
                 do {
                     Paging<TrackSimplified> albumTracks = KingsBot.getSpotifyAPI().getAlbumsTracks(
-                            SPOTIFY_ALBUM.matcher(url).results().findFirst().get().group(1)).build().execute();
+                            SPOTIFY_ALBUM.matcher(url).results().findFirst().get().group(1))
+                            .offset(offset).build().execute();
 
                     tracks.addAll(List.of(albumTracks.getItems()));
 
@@ -77,7 +78,8 @@ public class SpotifyUtils {
                 int offset = 0, total;
                 do {
                     Paging<PlaylistTrack> playlistTracks = KingsBot.getSpotifyAPI().getPlaylistsItems(
-                            SPOTIFY_PLAYLIST.matcher(url).results().findFirst().get().group(1)).build().execute();
+                            SPOTIFY_PLAYLIST.matcher(url).results().findFirst().get().group(1))
+                            .offset(offset).build().execute();
 
                     List.of(playlistTracks.getItems()).parallelStream().forEachOrdered(playlistTrack -> {
                         if(playlistTrack.getTrack().getType().equals(ModelObjectType.TRACK)) {

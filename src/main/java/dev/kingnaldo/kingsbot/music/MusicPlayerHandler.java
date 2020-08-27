@@ -44,7 +44,7 @@ public class MusicPlayerHandler {
     private final TrackScheduler scheduler;
     private volatile RepeatMode repeatMode;
     private volatile int position;
-    private volatile List<String> queue;
+    private volatile List<TrackQueue> queue;
     private volatile List<Integer> queueIndex;
     private volatile List<User> skipVotes;
     private volatile List<Long> nowPlayingMessage;
@@ -111,8 +111,19 @@ public class MusicPlayerHandler {
         repeatMode = mode;
     }
 
-    public List<String> getQueue() {
-        return new ArrayList<>(queue);
+    public int getQueueSize() {
+        return queue.size();
+    }
+
+    public List<TrackQueue> getQueue(int offset, int limit) {
+        List<TrackQueue> returnQueue = new ArrayList<>();
+
+        for(int i = offset; i <= offset + limit && i < queue.size(); i++) {
+            if(isShuffled()) returnQueue.add(queue.get(queueIndex.get(i)));
+            returnQueue.add(queue.get(i));
+        }
+
+        return returnQueue;
     }
 
     public synchronized void addToQueue(String identifier, boolean isSoundCloud) {
@@ -128,7 +139,7 @@ public class MusicPlayerHandler {
                     StringBuilder builder = new StringBuilder();
                     List.of(track.getArtists()).forEach(artist -> builder.append(artist.getName()).append(" "));
                     builder.append("- ").append(track.getName());
-                    queue.add("ytsearch:" + builder.toString());
+                    queue.add(new TrackQueue(builder.toString(), builder.toString(), TrackQueueType.SPOTIFY));
                     if(isShuffled()) queueIndex.add(queue.size() - 1);
                 });
                 if(player.getPlayingTrack() == null && !isPaused())
@@ -141,43 +152,33 @@ public class MusicPlayerHandler {
         }
 
         if(!Patterns.WEB_URL.matcher(identifier).matches()) {
-            if(isSoundCloud) identifier = "scsearch: " + identifier;
-            else identifier = "https://www.youtube.com/watch?v=" + YoutubeUtils.getFirstResultId(identifier);
+            new TrackQueue(identifier, identifier,
+                    isSoundCloud ? TrackQueueType.SOUNDCLOUD_SEARCH : TrackQueueType.YOUTUBE_SEARCH);
+            return;
         }
 
         PLAYER_MANAGER.loadItem(identifier, new FunctionalResultHandler(
                 track -> {
-                    queue.add(position, track.getInfo().uri);
+                    queue.add(new TrackQueue(identifier, track.getInfo().title, TrackQueueType.DIRECT_LINK));
+                    if(isShuffled()) queueIndex.add(queueIndex.size(), queueIndex.size() - 1);
+                    if(player.getPlayingTrack() == null && !isPaused()) playNextTrack();
+
                     textChannel.sendMessage(new EmbedBuilder()
                             .setTitle("Added to queue")
                             .setDescription("[" + track.getInfo().title
                                     + "](" + track.getInfo().uri + ")")
                             .build()).queue();
-                    if(isShuffled()) queueIndex.add(queueIndex.size(), queueIndex.size() - 1);
-                    if(player.getPlayingTrack() == null && !isPaused())
-                        this.playNextTrack();
                 }, playlist -> {
-            if (!playlist.isSearchResult()) {
-                playlist.getTracks().parallelStream().forEachOrdered(track -> queue.add(track.getInfo().uri));
-                if(isShuffled()) queueIndex.add(queueIndex.size(), queueIndex.size() - 1);
-                textChannel.sendMessage(new EmbedBuilder()
-                        .setDescription("Added " + playlist.getTracks().size()
-                                + " musics to queue.").build()).queue();
-            }else{
-                AudioTrack track = playlist.getTracks().get(0);
-                queue.add(position, track.getInfo().uri);
-                if(isShuffled()) queueIndex.add(queueIndex.size(), queueIndex.size() - 1);
-                textChannel.sendMessage(new EmbedBuilder()
-                        .setTitle("Added to queue")
-                        .setDescription("[" + track.getInfo().title
-                                + "](" + track.getInfo().uri + ")")
-                        .build()).queue();
-            }
-            if(player.getPlayingTrack() == null && !isPaused())
-                this.playNextTrack();
-        },
-                () -> textChannel.sendMessage("No matches found.").queue(),
-                exception -> textChannel.sendMessage("No matches found.").queue()));
+                    playlist.getTracks().parallelStream().forEachOrdered(track -> {
+                        queue.add(new TrackQueue(identifier, track.getInfo().title, TrackQueueType.DIRECT_LINK));
+                        if(isShuffled()) queueIndex.add(queueIndex.size(), queueIndex.size() - 1);
+                    });
+                    if(player.getPlayingTrack() == null && !isPaused()) playNextTrack();
+                    textChannel.sendMessage(new EmbedBuilder()
+                            .setDescription("Added " + playlist.getTracks().size()
+                                    + " musics to queue.").build()).queue();
+                }, () -> textChannel.sendMessage("No matches found.").queue(),
+                exception -> textChannel.sendMessage("Something went wrong.").queue()));
     }
 
     public synchronized boolean removeFromQueue(int position) {
@@ -299,14 +300,16 @@ public class MusicPlayerHandler {
             else playlist.getTracks().forEach(scheduler::queue); }, () -> {
             textChannel.sendMessage("No matches found.").queue();
             playNextTrack(); }, exception -> {
-            textChannel.sendMessage("No matches found.").queue();
+            textChannel.sendMessage("Something went wrong.").queue();
             playNextTrack(); });
 
-        String identifier = isShuffled() ? this.queue.get(queueIndex.get(position)) : queue.get(position);
-        if(identifier.startsWith("ytsearch:")) {
-            identifier = "https://www.youtube.com/watch?v=" +
-                    YoutubeUtils.getFirstResultId(identifier.substring(9));
+        TrackQueue trackQueue = isShuffled() ? this.queue.get(queueIndex.get(position)) : queue.get(position);
+
+        switch(trackQueue.type()) {
+            case DIRECT_LINK -> PLAYER_MANAGER.loadItem(trackQueue.query(), handler);
+            case SOUNDCLOUD_SEARCH -> PLAYER_MANAGER.loadItem("scsearch:" + trackQueue.query(), handler);
+            case YOUTUBE_SEARCH, SPOTIFY -> PLAYER_MANAGER.loadItem("https://www.youtube.com/watch?v="
+                            + YoutubeUtils.getFirstResultId(trackQueue.query()), handler);
         }
-        PLAYER_MANAGER.loadItem(identifier, handler);
     }
 }
