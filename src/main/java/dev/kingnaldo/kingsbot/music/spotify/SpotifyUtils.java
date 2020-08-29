@@ -23,8 +23,6 @@ public class SpotifyUtils {
     private static final Pattern SPOTIFY_TRACK = Pattern.compile("^(?:(?:(?:https://)?(?:open\\.spotify\\.com)(?:/embed)?)|spotify)(?:/track/|:track:)([a-zA-Z0-9]{22})(?:.*)");
     private static final Pattern SPOTIFY_SHOW = Pattern.compile("^(?:(?:(?:https://)?(?:open\\.spotify\\.com)(?:/embed)?)|spotify)(?:/show/|:show:)([a-zA-Z0-9]{22})(?:.*)");
 
-    private static final String API_BASE_URL = "https://api.spotify.com/v1/";
-
     public static boolean isSpotify(String url) {
         return SPOTIFY_ALBUM.matcher(url).matches() ||
                 SPOTIFY_ARTIST.matcher(url).matches() ||

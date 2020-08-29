@@ -22,6 +22,8 @@ import org.apache.logging.log4j.Logger;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class KingsBot {
     private static Logger LOGGER;
@@ -46,6 +48,9 @@ public class KingsBot {
             MusicPlayerHandler.init();
 
             SPOTIFY_API = SpotifyConnector.getSpotifyAPI();
+            Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
+                    () -> SpotifyConnector.updateAccessToken(SPOTIFY_API),
+                    3540, 3540, TimeUnit.SECONDS);
 
             JDABuilder builder = JDABuilder.create(
                     CONFIG.token(),
