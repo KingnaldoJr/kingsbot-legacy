@@ -12,8 +12,8 @@ import dev.kingnaldo.kingsbot.KingsBot;
 import dev.kingnaldo.kingsbot.music.spotify.SpotifyUtils;
 import dev.kingnaldo.kingsbot.music.youtube.YoutubeUtils;
 import lavalink.client.LavalinkUtil;
-import lavalink.client.io.Link;
 import lavalink.client.io.jda.JdaLavalink;
+import lavalink.client.io.jda.JdaLink;
 import lavalink.client.player.LavalinkPlayer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -25,10 +25,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MusicPlayerHandler {
@@ -92,6 +89,15 @@ public class MusicPlayerHandler {
         }
     }
 
+    public static boolean connectedToVoiceChannel(VoiceChannel channel) {
+        if(PLAYER_INSTANCES.containsKey(channel.getGuild().getIdLong())) {
+            JdaLink link = LAVALINK.getExistingLink(channel.getGuild());
+            if(link != null) {
+                return Objects.equals(link.getChannel(), channel.getId());
+            }else return false;
+        }else return false;
+    }
+
     private void removeThisGuild() {
         player.getLink().disconnect();
         player.getLink().destroy();
@@ -99,7 +105,7 @@ public class MusicPlayerHandler {
     }
 
     public boolean isConnected() {
-        return player.getLink().getState() == Link.State.CONNECTED;
+        return player.getLink().getState() == JdaLink.State.CONNECTED;
     }
 
     public void connectToVoiceChannel(VoiceChannel channel) {
@@ -228,9 +234,11 @@ public class MusicPlayerHandler {
                         .setDescription("[" + player.getPlayingTrack().getInfo().title + "]("
                                 + player.getPlayingTrack().getInfo().uri + ")")
                         .build()).complete().getIdLong());
+            cancelAutoLeave(LeaveReason.PAUSE);
         }else{
             player.setPaused(true);
             nowPlayingMessage.forEach(textChannel::purgeMessagesById);
+            startAutoLeave(LeaveReason.PAUSE);
         }
         return this.isPaused();
     }
@@ -282,10 +290,24 @@ public class MusicPlayerHandler {
         queue.clear();
         if(queueIndex != null) queueIndex.clear();
         if(player.getPlayingTrack() != null) player.stopTrack();
+        startAutoLeave(LeaveReason.END_QUEUE);
+    }
 
+    public void startAutoLeave(LeaveReason reason) {
+        System.out.println("start " + reason);
         if(autoLeaveServer == null || !autoLeaveServer.isAlive()) {
-            autoLeaveServer = new AutoLeaveVoiceServer(guild);
+            autoLeaveServer = new AutoLeaveVoiceServer(guild, reason);
             autoLeaveServer.start();
+        }
+    }
+
+    public void cancelAutoLeave(LeaveReason reason) {
+        System.out.println("stop " + reason);
+        if(autoLeaveServer != null && autoLeaveServer.isAlive()) {
+            if(autoLeaveServer.getReason().equals(reason)) {
+                autoLeaveServer.cancel();
+                autoLeaveServer = null;
+            }
         }
     }
 
@@ -307,10 +329,7 @@ public class MusicPlayerHandler {
         if(position == queue.size() - 1) {
             textChannel.sendMessage("Queue ended!").queue();
             position++;
-            if(autoLeaveServer == null || !autoLeaveServer.isAlive()) {
-                autoLeaveServer = new AutoLeaveVoiceServer(guild);
-                autoLeaveServer.start();
-            }
+            startAutoLeave(LeaveReason.END_QUEUE);
         }else{
             playNextTrack();
             position++;
@@ -318,10 +337,7 @@ public class MusicPlayerHandler {
     }
 
     public synchronized void playNextTrack() {
-        if(autoLeaveServer != null && autoLeaveServer.isAlive()) {
-            autoLeaveServer.cancel();
-            autoLeaveServer = null;
-        }
+        cancelAutoLeave(LeaveReason.END_QUEUE);
 
         if(position == queue.size()) {
             if(repeatMode.equals(RepeatMode.QUEUE)) {
@@ -329,9 +345,7 @@ public class MusicPlayerHandler {
             }
         }
         if(position >= queue.size()) {
-            autoLeaveServer = new AutoLeaveVoiceServer(guild);
-            autoLeaveServer.start();
-            return;
+            startAutoLeave(LeaveReason.END_QUEUE);
         }
 
         FunctionalResultHandler handler = new FunctionalResultHandler(

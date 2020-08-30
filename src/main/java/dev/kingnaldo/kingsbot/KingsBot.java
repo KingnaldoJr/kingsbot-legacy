@@ -7,6 +7,7 @@ import dev.kingnaldo.kingsbot.config.Config;
 import dev.kingnaldo.kingsbot.config.ConfigManager;
 import dev.kingnaldo.kingsbot.config.LoggerConfig;
 import dev.kingnaldo.kingsbot.db.DatabaseManager;
+import dev.kingnaldo.kingsbot.handlers.GuildVoiceUpdateHandler;
 import dev.kingnaldo.kingsbot.music.MusicPlayerHandler;
 import dev.kingnaldo.kingsbot.music.spotify.SpotifyConnector;
 import net.dv8tion.jda.api.JDA;
@@ -64,6 +65,7 @@ public class KingsBot {
                     CacheFlag.EMOTE);
             builder.setActivity(Activity.listening("Duck Machine on Spotify"));
             builder.addEventListeners(new CommandManager());
+            builder.addEventListeners(new GuildVoiceUpdateHandler());
             builder.addEventListeners(MusicPlayerHandler.getLavalink());
             builder.setVoiceDispatchInterceptor(MusicPlayerHandler.getLavalink().getVoiceInterceptor());
 
