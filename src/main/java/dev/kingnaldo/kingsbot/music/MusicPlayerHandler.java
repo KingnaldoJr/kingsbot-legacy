@@ -150,30 +150,36 @@ public class MusicPlayerHandler {
                                     + "](" + track.getInfo().uri + ")")
                             .build()).queue();
                 }, playlist -> {
-            if(playlist.isSearchResult()) {
-                queue.add(new TrackQueue(
-                        playlist.getTracks().get(0).getInfo().uri,
-                        playlist.getTracks().get(0).getInfo().title,
-                        TrackQueueType.SEARCH));
-                if(isShuffled()) queueIndex.add(queueIndex.size(), queueIndex.size() - 1);
-            }else{
-                playlist.getTracks().parallelStream().forEachOrdered(track -> {
-                    queue.add(new TrackQueue(track.getInfo().uri,
+                    if(playlist.isSearchResult()) {
+                        queue.add(new TrackQueue(
+                                playlist.getTracks().get(0).getInfo().uri,
+                                playlist.getTracks().get(0).getInfo().title,
+                                TrackQueueType.SEARCH));
+                        if(isShuffled()) queueIndex.add(queueIndex.size(), queueIndex.size() - 1);
+                    }else{
+                        playlist.getTracks().parallelStream().forEachOrdered(track -> {
+                            queue.add(new TrackQueue(track.getInfo().uri,
                             track.getInfo().title, TrackQueueType.DIRECT_LINK));
-                    if(isShuffled()) queueIndex.add(queueIndex.size(), queueIndex.size() - 1);
+                            if(isShuffled()) queueIndex.add(queueIndex.size(), queueIndex.size() - 1);
+                        });
+                    }
+                    if(player.getPlayingTrack() == null && !isPaused()) playNextTrack();
+                    textChannel.sendMessage(new EmbedBuilder()
+                            .setDescription("Added " + playlist.getTracks().size()
+                                    + " musics to queue.").build()).queue();
+                }, () -> {
+                    textChannel.sendMessage("No matches found.").queue();
+                    playNextTrack();
+                },
+                exception -> {
+                    textChannel.sendMessage("Something went wrong.").queue();
+                    playNextTrack();
                 });
-            }
-            if(player.getPlayingTrack() == null && !isPaused()) playNextTrack();
-            textChannel.sendMessage(new EmbedBuilder()
-                    .setDescription("Added " + playlist.getTracks().size()
-                            + " musics to queue.").build()).queue();
-        }, () -> textChannel.sendMessage("No matches found.").queue(),
-                exception -> textChannel.sendMessage("Something went wrong.").queue());
 
         if(SpotifyUtils.isSpotify(identifier)) {
             try {
                 List<TrackSimplified> tracks = SpotifyUtils.getSpotifyObject(identifier);
-                if(tracks.size() < 1) {
+                if(tracks.size() == 0) {
                     textChannel.sendMessage("Empty playlist.").queue();
                     return;
                 }else if(tracks.size() == 1) {
@@ -197,6 +203,7 @@ public class MusicPlayerHandler {
             }catch(IOException | ParseException | SpotifyWebApiException e) {
                 textChannel.sendMessage("Something went wrong.").queue();
                 LogManager.getLogger(MusicPlayerHandler.class).error(e.getMessage());
+                forceSkip();
             }
             return;
         }
@@ -282,8 +289,12 @@ public class MusicPlayerHandler {
     }
 
     public synchronized void forceSkip() {
-        textChannel.sendMessage("Skipped!").queue();
-        scheduler.skipTrack();
+        if(position >= queue.size()) {
+            textChannel.sendMessage("Queue ended!").queue();
+        }else{
+            textChannel.sendMessage("Skipped!").queue();
+            scheduler.skipTrack();
+        }
     }
 
     public synchronized void stopQueue() {
@@ -294,7 +305,6 @@ public class MusicPlayerHandler {
     }
 
     public void startAutoLeave(LeaveReason reason) {
-        System.out.println("start " + reason);
         if(autoLeaveServer == null || !autoLeaveServer.isAlive()) {
             autoLeaveServer = new AutoLeaveVoiceServer(guild, reason);
             autoLeaveServer.start();
@@ -302,7 +312,6 @@ public class MusicPlayerHandler {
     }
 
     public void cancelAutoLeave(LeaveReason reason) {
-        System.out.println("stop " + reason);
         if(autoLeaveServer != null && autoLeaveServer.isAlive()) {
             if(autoLeaveServer.getReason().equals(reason)) {
                 autoLeaveServer.cancel();
@@ -331,8 +340,8 @@ public class MusicPlayerHandler {
             position++;
             startAutoLeave(LeaveReason.END_QUEUE);
         }else{
-            playNextTrack();
             position++;
+            playNextTrack();
         }
     }
 
@@ -346,19 +355,26 @@ public class MusicPlayerHandler {
         }
         if(position >= queue.size()) {
             startAutoLeave(LeaveReason.END_QUEUE);
+            return;
         }
 
         FunctionalResultHandler handler = new FunctionalResultHandler(
                 scheduler::queue, playlist -> {
-            if(playlist.isSearchResult())
-                scheduler.queue(playlist.getTracks().get(0));
-            else playlist.getTracks().forEach(scheduler::queue); }, () -> {
-            textChannel.sendMessage("No matches found.").queue();
-            playNextTrack(); }, exception -> {
-            textChannel.sendMessage("Something went wrong.").queue();
-            playNextTrack(); });
+                    if(playlist.isSearchResult())
+                        scheduler.queue(playlist.getTracks().get(0));
+                    else playlist.getTracks().forEach(scheduler::queue); },
+                () -> {
+                    textChannel.sendMessage("No matches found.").queue();
+                    playNextTrack(); },
+                exception -> {
+                    textChannel.sendMessage("Something went wrong.").queue();
+                    position++;
+                    playNextTrack(); });
 
         TrackQueue trackQueue = isShuffled() ? this.queue.get(queueIndex.get(position)) : queue.get(position);
-        PLAYER_MANAGER.loadItem(trackQueue.query(), handler);
+        if(trackQueue.type().equals(TrackQueueType.SPOTIFY))
+            PLAYER_MANAGER.loadItem("https://www.youtube.com/watch?v=" +
+                    YoutubeUtils.getFirstResultId(trackQueue.name()), handler);
+        else PLAYER_MANAGER.loadItem(trackQueue.query(), handler);
     }
 }
